@@ -9,6 +9,6 @@ BUILD DEPENDENCIES:
 	libpassphrase	https://github.com/GNU-Pony/libpassphrase
 	argparser-c	https://github.com/maandree/argparser
 	make
-	cc
+	c99
 	coreutils
 

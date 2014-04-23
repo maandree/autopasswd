@@ -20,17 +20,17 @@
 
 
 #ifdef WITH_C99
-  #define static_inline static inline
+#  define static_inline static inline
 #else
-  #define static_inline inline
+#  define static_inline inline
 #endif
 
 #ifdef WITH_THREADLOCAL
-  #define threadlocal __thread
+#  define threadlocal __thread
   /* This is compiler dependent, if your compiler does
    * not support this you need to define __thread yourself. */
 #else
-  #define threadlocal /* no threading support */
+#  define threadlocal /* no threading support */
 #endif
 
 #define null 0
@@ -520,7 +520,7 @@ static_inline byte* sha3_pad10star1(byte* restrict_ msg, long len, long r, long*
  * @param  capacity  The capacity
  * @param  output    The output size
  */
-extern void sha3_initialise(long bitrate, long capacity, long output)
+void sha3_initialise(long bitrate, long capacity, long output)
 {
   long i;
   
@@ -550,7 +550,7 @@ extern void sha3_initialise(long bitrate, long capacity, long output)
 /**
  * Dispose of the Keccak sponge
  */
-extern void sha3_dispose()
+void sha3_dispose()
 {
   #ifdef WITH_WIPE
   long i;
@@ -581,7 +581,7 @@ extern void sha3_dispose()
  * @param  msg     The partial message
  * @param  msglen  The length of the partial message
  */
-extern void sha3_update(byte* restrict_ msg, long msglen)
+void sha3_update(byte* restrict_ msg, long msglen)
 {
   long rr = r >> 3;
   long ww = w >> 3;
@@ -659,7 +659,7 @@ extern void sha3_update(byte* restrict_ msg, long msglen)
  * @param   withReturn  Whether to return the hash instead of just do a quick squeeze phrase and return {@code null}
  * @return              The hash sum, or {@code null} if <tt>withReturn</tt> is {@code false}
  */
-extern byte* sha3_digest(byte* restrict_ msg, long msglen, boolean withReturn)
+byte* sha3_digest(byte* restrict_ msg, long msglen, boolean withReturn)
 {
   byte* message;
   byte* _msg;
@@ -777,7 +777,7 @@ extern byte* sha3_digest(byte* restrict_ msg, long msglen, boolean withReturn)
  * 
  * @param  times  The number of rounds
  */
-extern void sha3_simpleSqueeze(long times)
+void sha3_simpleSqueeze(long times)
 {
   long i;
   for (i = 0; i < times; i++)
@@ -790,7 +790,7 @@ extern void sha3_simpleSqueeze(long times)
  * 
  * @param  times  The number of digests
  */
-extern void sha3_fastSqueeze(long times)
+void sha3_fastSqueeze(long times)
 {
   long i, olen;
   for (i = 0; i < times; i++)
@@ -808,7 +808,7 @@ extern void sha3_fastSqueeze(long times)
  * 
  * @return  The hash sum
  */
-extern byte* sha3_squeeze(void)
+byte* sha3_squeeze(void)
 {
   long nn, ww, olen, i, j, ptr, ni;
   byte* rc;
@@ -852,7 +852,7 @@ extern byte* sha3_squeeze(void)
  * 
  * @return  A 25-element array with the state, changes will be applied to the sponge
  */
-extern llong* sha3_state(void)
+llong* sha3_state(void)
 {
   return S;
 }
