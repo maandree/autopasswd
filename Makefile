@@ -3,6 +3,16 @@
 # notice and this notice are preserved.  This file is offered as-is,
 # without any warranty.
 
+PREFIX ?= /usr
+BIN ?= /bin
+BINDIR ?= $(PREFIX)$(BIN)
+DATA ?= /share
+DATADIR ?= $(PREFIX)$(DATA)
+LICENSEDIR ?= $(DATADIR)/licenses
+
+PKGNAME = autopasswd
+COMMAND = autopasswd
+
 OPTIMISE = -O0
 
 WARN = -Wall -Wextra -pedantic -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include-dirs  \
@@ -24,6 +34,7 @@ STD = c99
 FLAGS = $(OPTIMISE) -std=$(STD) $(F_OPTS) $(X) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -DWITH_C99
 
 
+.PHONY: all
 all: bin/autopasswd
 
 bin/autopasswd: obj/autopasswd.o obj/sha3.o
@@ -39,5 +50,20 @@ obj/sha3.o: src/sha3.c src/sha3.h
 	$(CC) $(FLAGS) -c -o $@ $<
 
 
+.PHONY: install
+install: bin/autopasswd
+	install -dm755 -- "$(DESTDIR)$(BINDIR)"
+	install -m755 bin/autopasswd -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	install -m644  COPYING LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+
+.PHONY: uninstall
+uninstall:
+	-rm -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
+	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
+	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
+	-rmdir -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+
+.PHONY: clean
 clean:
 	-rm -r bin obj
