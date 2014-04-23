@@ -79,6 +79,43 @@
 #endif
 
 
+/**
+ * The bitrate parameter for the Keccak sponge when hashing master passphrase
+ */
+#ifndef MASTER_PASSPHRASE_KECCAK_BITRATE
+# define MASTER_PASSPHRASE_KECCAK_BITRATE  576
+#endif
+
+/**
+ * The capacity parameter for the Keccak sponge when hashing master passphrase
+ */
+#ifndef MASTER_PASSPHRASE_KECCAK_CAPACITY
+# define MASTER_PASSPHRASE_KECCAK_CAPACITY  1024
+#endif
+
+/**
+ * The output parameter for the Keccak sponge when hashing master passphrase
+ */
+#ifndef MASTER_PASSPHRASE_KECCAK_OUTPUT
+# define MASTER_PASSPHRASE_KECCAK_OUTPUT  32
+#endif
+
+/**
+ * The number of times to squeeze the master passphrase
+ */
+#ifndef MASTER_PASSPHRASE_KECCAK_SQUEEZES
+# define MASTER_PASSPHRASE_KECCAK_SQUEEZES  10000
+#endif
+
+/**
+ * The hexadecimal alphabet
+ */
+#ifndef HEXADECA
+# define HEXADECA  "0123456789abcdef"
+#endif
+
+
+
 static inline char* last_arg(char* arg)
 {
   return *(args_opts_get(arg) + (args_opts_get_count(arg) - 1));
@@ -118,6 +155,8 @@ int main(int argc, char** argv)
   char* base64;
   size_t ptr64;
   size_t ptr;
+  char* master_passphrase_hash;
+  
   
   /* Parse command line arguments. */
   args_init("Reproducible password generator", "autopasswd [options...]",
@@ -394,6 +433,7 @@ int main(int argc, char** argv)
   if (site == NULL)
     {
       perror(*argv);
+      passphrase_disable_echo();
       return 1;
     }
   fprintf(stderr, "%s", SITE_PROMPT_STRING);
@@ -404,6 +444,7 @@ int main(int argc, char** argv)
       if (c == -1)
 	{
 	  free(site);
+	  passphrase_disable_echo();
 	  return 0;
 	}
       if (c == '\n')
@@ -414,11 +455,13 @@ int main(int argc, char** argv)
       *(site + ptr++) = (char)c;
     }
   
-  /* Disable echoing. (Should be done as soon as possible.) */
+  /* Disable echoing. (Should be done as soon as possible after reading site.) */
   passphrase_disable_echo();
   
   /* Initialise Keccak sponge. */
-  sha3_initialise(keccak_bitrate, keccak_capacity, keccak_output);
+  sha3_initialise(MASTER_PASSPHRASE_KECCAK_BITRATE,
+		  MASTER_PASSPHRASE_KECCAK_CAPACITY,
+		  MASTER_PASSPHRASE_KECCAK_OUTPUT);
   
   /* Read passphrease. */
   fprintf(stderr, "%s", PASSPHRASE_PROMPT_STRING);
@@ -436,6 +479,31 @@ int main(int argc, char** argv)
   /* Reset terminal settings. */
   passphrase_reenable_echo();
   
+  /* Hash and display master passphrase so hint the user whether it as typed correctly or not. */
+  master_passphrase_hash = malloc((MASTER_PASSPHRASE_KECCAK_OUTPUT * 2 + 1) * sizeof(char));
+  if (master_passphrase_hash == NULL)
+    {
+      perror(*argv);
+      return 1;
+    }
+  digest = sha3_digest(passphrase, strlen(passphrase), MASTER_PASSPHRASE_KECCAK_SQUEEZES == 1);
+  if (MASTER_PASSPHRASE_KECCAK_SQUEEZES > 2)
+    sha3_fastSqueeze(MASTER_PASSPHRASE_KECCAK_SQUEEZES - 2);
+  if (MASTER_PASSPHRASE_KECCAK_SQUEEZES > 1)
+    digest = sha3_squeeze();
+  for (ptr = 0; ptr < (MASTER_PASSPHRASE_KECCAK_OUTPUT + 7) / 8; ptr++)
+    {
+      uint8_t v = *(digest + ptr);
+      *(master_passphrase_hash + ptr * 2 + 0) = HEXADECA[(v >> 4) & 15];
+      *(master_passphrase_hash + ptr * 2 + 1) = HEXADECA[(v >> 0) & 15];
+    }
+  *(master_passphrase_hash + ptr * 2) = 0;
+  fprintf(stderr, "%s: master passphrase hash: %s\n", *argv, master_passphrase_hash);
+  
+  /* Reinitialise Keccak sponge. */
+  sha3_dispose();
+  sha3_initialise(keccak_bitrate, keccak_capacity, keccak_output);
+  
   /* Add passphrase to Keccak sponge input. */
   sha3_update(passphrase, strlen(passphrase));
   
@@ -444,6 +512,8 @@ int main(int argc, char** argv)
   free(passphrase);
   
   /* Add site to Keccak sponge input. */
+  free(digest); /* (Should be done after wiping passphrase.) */
+  free(master_passphrase_hash); /* (Should be done after wiping passphrase.) */
   digest = sha3_digest(site, strlen(site), keccak_squeezes == 1);
   
   /* Release resources. */
