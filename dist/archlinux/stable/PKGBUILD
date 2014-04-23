@@ -3,7 +3,7 @@
 pkgname=autopasswd
 pkgver=1
 pkgrel=1
-pkgdesc="Reproducible password generator"
+pkgdesc="Reproducable password generator"
 url="https://github.com/maandree/autopasswd"
 arch=(i686 x86_64)
 license=(GPL3)
