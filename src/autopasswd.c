@@ -170,7 +170,7 @@ int main(int argc, char** argv)
 		  "Display copyright information");
   args_add_option(args_new_argumentless(NULL, 0, "+w", "--warranty", NULL),
 		  "Display warranty disclaimer");
-  args_add_option(args_new_argumentless(NULL, 0, "+v", "--verbose", NULL),
+  args_add_option(args_new_argumentless(NULL, 0, "-v", "--verbose", NULL),
 		  "Display extra information");
   args_add_option(args_new_argumented(NULL, "INT", 0, "-b", "--bump-level", NULL),
 		  "Select bump level, can contain + or - to perform accumulated adjustment");
@@ -249,10 +249,10 @@ int main(int argc, char** argv)
 	    case 0:
 	      break;
 	    case '+':
-	      bump_level += atol(arg);
+	      bump_level += atol(arg + 1);
 	      break;
 	    case '-':
-	      bump_level -= atol(arg);
+	      bump_level -= atol(arg + 1);
 	      break;
 	    default:
 	      bump_level = atol(arg);
