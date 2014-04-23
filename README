@@ -1,0 +1,26 @@
+autopasswd is command line program that deterministically
+generates a strong password based on your master password
+and the service name your that ask it to generate a password
+for. autopasswd will print the entered password with black
+on black text so that it cannot be read visually. You can
+also choose to make the output readable by a program. To
+make sure that you did not mistype your master passphrase
+a short Keccak hash of it will be echoed.
+
+autopasswd uses Keccak with fully configurable parameters
+to generate a password and performs 300000 sponge squeezes
+by default. This number can be configured like the other
+Keccak parameter, but you can also specify a bump level
+that modifies it. A bump level is a number to you increase
+when you need to change your password for a service.
+I recommend that you use correctpony to generate your
+master passphrase.
+
+autopasswd use libpassphrase to read your passphrase from
+the terminal. This is library that can be personalised at
+compile time and ensures that the passphrase is not stored
+in memory in any other place that its return value. This
+passphrase is wipe by autopasswd from memory as soon as
+possible it autopasswd makes its best to ensure that the
+program cannot crash before it is wiped.
+
