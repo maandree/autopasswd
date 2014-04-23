@@ -116,7 +116,7 @@
 
 
 
-static inline char* last_arg(char* arg)
+static char* last_arg(char* arg)
 {
   return *(args_opts_get(arg) + (args_opts_get_count(arg) - 1));
 }
@@ -135,7 +135,6 @@ int main(int argc, char** argv)
   long keccak_state_size_ = KECCAK_STATE_SIZE;
   long keccak_capacity_ = keccak_state_size_ - (keccak_output_ << 1);
   long keccak_bitrate_ = keccak_state_size_ - keccak_capacity_;
-  long keccak_word_size_ = keccak_state_size_ / 25;
   long keccak_squeezes = KECCAK_SQUEEZES;
   int output__ = 0;
   int state_size__ = 0;
@@ -149,13 +148,16 @@ int main(int argc, char** argv)
   long bitrate_, keccak_bitrate;
   long word_size_, keccak_word_size;
   long squeezes_;
-  char* site;
+  byte* site;
   char* passphrase;
-  uint8_t* digest;
+  byte* passphrase_hash;
+  int_fast8_t* digest;
   char* base64;
   size_t ptr64;
   size_t ptr;
   char* master_passphrase_hash;
+  size_t passphrase_n;
+  size_t site_n;
   
   
   /* Parse command line arguments. */
@@ -229,7 +231,7 @@ int main(int argc, char** argv)
     }
   if (args_opts_used("--clear-mode"))
     {
-      clear_mode = args_opts_get_count("--clear-mode");
+      clear_mode = (int)args_opts_get_count("--clear-mode");
     }
   if (args_opts_used("--verbose"))
     {
@@ -237,7 +239,7 @@ int main(int argc, char** argv)
     }
   if (args_opts_used("--bump-level"))
     {
-      size_t n = args_opts_get_count("--bump-level");
+      size_t n = (size_t)args_opts_get_count("--bump-level");
       char** arr = args_opts_get("--bump-level");
       char* arg;
       for (ptr = 0; ptr < n; ptr++)
@@ -429,7 +431,7 @@ int main(int argc, char** argv)
     }
   
   /* Read site. */
-  site = malloc(site_size * sizeof(char));
+  site = malloc(site_size * sizeof(byte));
   if (site == NULL)
     {
       perror(*argv);
@@ -438,9 +440,19 @@ int main(int argc, char** argv)
     }
   fprintf(stderr, "%s", SITE_PROMPT_STRING);
   fflush(stderr);
-  for (ptr = 0;;)
+  for (site_n = 0;;)
     {
       int c = getchar();
+      if (site_n == site_size)
+	{
+	  site = realloc(site, (site_size <<= 1) * sizeof(byte));
+	  if (site == NULL)
+	    {
+	      perror(*argv);
+	      passphrase_disable_echo();
+	      return 1;
+	    }
+	}
       if (c == -1)
 	{
 	  free(site);
@@ -448,11 +460,8 @@ int main(int argc, char** argv)
 	  return 0;
 	}
       if (c == '\n')
-	{
-	  *(site + ptr) = 0;
-	  break;
-	}
-      *(site + ptr++) = (char)c;
+	break;
+      *(site + site_n++) = (char)c;
     }
   
   /* Disable echoing. (Should be done as soon as possible after reading site.) */
@@ -479,21 +488,44 @@ int main(int argc, char** argv)
   /* Reset terminal settings. */
   passphrase_reenable_echo();
   
+  /* Measure passphrase length. */
+  passphrase_n = strlen(passphrase);
+  
+  /* Translate password to sha3.h friendly format. */
+  passphrase_hash = malloc((passphrase_n + 1) * sizeof(byte));
+  if (passphrase_hash == NULL)
+    {
+      perror(*argv);
+      memset(passphrase, 0, passphrase_n * sizeof(char));
+      free(passphrase);
+      return 1;
+    }
+  else
+    {
+      for (ptr = 0; ptr <= passphrase_n; ptr++)
+	*(passphrase_hash + ptr) = *(passphrase + ptr);
+      /* Wipe source password, however it is not yet secure to free it. (Should be done as sone as possible.) */
+      memset(passphrase, 0, passphrase_n * sizeof(char));
+    }
+  
   /* Hash and display master passphrase so hint the user whether it as typed correctly or not. */
   master_passphrase_hash = malloc((MASTER_PASSPHRASE_KECCAK_OUTPUT * 2 + 1) * sizeof(char));
   if (master_passphrase_hash == NULL)
     {
       perror(*argv);
+      memset(passphrase_hash, 0, passphrase_n * sizeof(byte));
+      free(passphrase_hash);
+      free(passphrase);
       return 1;
     }
-  digest = sha3_digest(passphrase, strlen(passphrase), MASTER_PASSPHRASE_KECCAK_SQUEEZES == 1);
+  digest = sha3_digest(passphrase_hash, (long)passphrase_n, MASTER_PASSPHRASE_KECCAK_SQUEEZES == 1);
   if (MASTER_PASSPHRASE_KECCAK_SQUEEZES > 2)
     sha3_fastSqueeze(MASTER_PASSPHRASE_KECCAK_SQUEEZES - 2);
   if (MASTER_PASSPHRASE_KECCAK_SQUEEZES > 1)
     digest = sha3_squeeze();
   for (ptr = 0; ptr < (MASTER_PASSPHRASE_KECCAK_OUTPUT + 7) / 8; ptr++)
     {
-      uint8_t v = *(digest + ptr);
+      uint8_t v = (uint8_t)*(digest + ptr);
       *(master_passphrase_hash + ptr * 2 + 0) = HEXADECA[(v >> 4) & 15];
       *(master_passphrase_hash + ptr * 2 + 1) = HEXADECA[(v >> 0) & 15];
     }
@@ -505,16 +537,17 @@ int main(int argc, char** argv)
   sha3_initialise(keccak_bitrate, keccak_capacity, keccak_output);
   
   /* Add passphrase to Keccak sponge input. */
-  sha3_update(passphrase, strlen(passphrase));
+  sha3_update(passphrase_hash, (long)passphrase_n);
   
   /* Clear passphrase from memory. (Should be done as sone as possible.) */
-  memset(passphrase, 0, strlen(passphrase));
+  memset(passphrase, 0, passphrase_n * sizeof(char));
+  free(passphrase_hash);
   free(passphrase);
   
   /* Add site to Keccak sponge input. */
   free(digest); /* (Should be done after wiping passphrase.) */
   free(master_passphrase_hash); /* (Should be done after wiping passphrase.) */
-  digest = sha3_digest(site, strlen(site), keccak_squeezes == 1);
+  digest = sha3_digest(site, (long)site_n, keccak_squeezes == 1);
   
   /* Release resources. */
   free(site);
@@ -529,20 +562,20 @@ int main(int argc, char** argv)
   sha3_dispose();
   
   /* Encode with base64 (no invalid character, shorter than hexadecimal.) */
-  base64 = malloc((4 * ((((keccak_output + 7) / 8) + 2) / 3) + 2) * sizeof(char));
+  base64 = malloc((4 * (((((size_t)keccak_output + 7) / 8) + 2) / 3) + 2) * sizeof(char));
   if (base64 == NULL)
     {
       perror(*argv);
       free(digest);
       free(base64);
     }
-  for (ptr = ptr64 = 0; ptr < (keccak_output + 7) / 8; ptr64 += 4)
+  for (ptr = ptr64 = 0; ptr < (size_t)((keccak_output + 7) / 8); ptr64 += 4)
     {
-      uint32_t a = ptr < ((keccak_output + 7) / 8) ? digest[ptr++] : 0;
-      uint32_t b = ptr < ((keccak_output + 7) / 8) ? digest[ptr++] : 0;
-      uint32_t c = ptr < ((keccak_output + 7) / 8) ? digest[ptr++] : 0;
+      uint8_t a = (uint8_t)(ptr < (size_t)((keccak_output + 7) / 8) ? digest[ptr++] : 0);
+      uint8_t b = (uint8_t)(ptr < (size_t)((keccak_output + 7) / 8) ? digest[ptr++] : 0);
+      uint8_t c = (uint8_t)(ptr < (size_t)((keccak_output + 7) / 8) ? digest[ptr++] : 0);
       
-      uint32_t abc = (a << 16) | (b << 8) | (c << 0);
+      uint32_t abc = ((uint32_t)a << 16) | ((uint32_t)b << 8) | ((uint32_t)c << 0);
       
       base64[ptr64 | 0] = BASE64[(abc >> (3 * 6)) & 63];
       base64[ptr64 | 1] = BASE64[(abc >> (2 * 6)) & 63];
