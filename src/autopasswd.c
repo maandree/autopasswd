@@ -461,7 +461,7 @@ int main(int argc, char** argv)
 	}
       if (c == '\n')
 	break;
-      *(site + site_n++) = (char)c;
+      *(site + site_n++) = (byte)c;
     }
   
   /* Disable echoing. (Should be done as soon as possible after reading site.) */

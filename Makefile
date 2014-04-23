@@ -13,7 +13,7 @@ LICENSEDIR ?= $(DATADIR)/licenses
 PKGNAME = autopasswd
 COMMAND = autopasswd
 
-OPTIMISE = -O0
+OPTIMISE = -Ofast
 
 WARN = -Wall -Wextra -pedantic -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include-dirs  \
        -Wtrampolines -Wfloat-equal -Wshadow -Wmissing-prototypes -Wmissing-declarations          \
