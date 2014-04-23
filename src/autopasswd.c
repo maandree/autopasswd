@@ -1,5 +1,5 @@
 /**
- * autopasswd – Reproducible password generator
+ * autopasswd – Reproducable password generator
  * 
  * Copyright © 2014  Mattias Andrée (maandree@member.fsf.org)
  * 
@@ -161,7 +161,7 @@ int main(int argc, char** argv)
   
   
   /* Parse command line arguments. */
-  args_init("Reproducible password generator", "autopasswd [options...]",
+  args_init("Reproducable password generator", "autopasswd [options...]",
 	    "TODO", 0, 1, 0, args_standard_abbreviations);
   
   args_add_option(args_new_argumentless(NULL, 0, "-h", "-?", "--help", NULL),
@@ -201,7 +201,7 @@ int main(int argc, char** argv)
     }
   if (args_opts_used("--copyright"))
     {
-      printf("autopasswd – Reproducible password generator\n");
+      printf("autopasswd – Reproducable password generator\n");
       printf("\n");
       printf("Copyright © 2014  Mattias Andrée (maandree@member.fsf.org)\n");
       printf("\n");
