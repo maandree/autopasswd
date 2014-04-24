@@ -502,7 +502,7 @@ int main(int argc, char** argv)
     }
   else
     {
-      for (ptr = 0; ptr <= passphrase_n; ptr++)
+      for (ptr = 0; ptr < passphrase_n + 1; ptr++)
 	*(passphrase_hash + ptr) = (byte)*(passphrase + ptr);
       /* Wipe source password, however it is not yet secure to free it. (Should be done as sone as possible.) */
       memset(passphrase, 0, passphrase_n * sizeof(char));
