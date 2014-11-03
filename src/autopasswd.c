@@ -362,7 +362,7 @@ int main(int argc, char** argv)
 	  return 1;
 	}
     }
-  if ((bitrate__ & capacity__ & output__) == 0) /* state_size? */
+  if ((bitrate__ | capacity__ | output__) == 0) /* state_size? */
     {
       keccak_state_size = state_size__ ? keccak_state_size : keccak_state_size_;
       keccak_output = (((keccak_state_size << 5) / 100 + 7) >> 3) << 3;
@@ -370,7 +370,7 @@ int main(int argc, char** argv)
       keccak_capacity = keccak_state_size - keccak_bitrate;
       keccak_output = keccak_output < 8 ? 8 : keccak_output;
     }
-  else if ((bitrate__ & capacity__) == 0) /* !output state_size? */
+  else if ((bitrate__ | capacity__) == 0) /* !output state_size? */
     {
       keccak_bitrate = keccak_bitrate_;
       keccak_capacity = keccak_capacity_;
