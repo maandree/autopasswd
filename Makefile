@@ -31,7 +31,7 @@ X =
 
 STD = c99
 
-FLAGS = $(OPTIMISE) -std=$(STD) $(F_OPTS) $(X) $(CFLAGS) $(CPPFLAGS) $(LDFLAGS) -DWITH_C99
+FLAGS = $(OPTIMISE) -std=$(STD) $(F_OPTS) $(X) -DWITH_C99
 
 
 .PHONY: all
@@ -39,15 +39,15 @@ all: bin/autopasswd
 
 bin/autopasswd: obj/autopasswd.o obj/sha3.o
 	@mkdir -p bin
-	$(CC) $(FLAGS) -fwhole-program -lpassphrase -largparser -o $@ $^
+	$(CC) $(FLAGS) -fwhole-program -lpassphrase -largparser -o $@ $^ $(LDFLAGS)
 
 obj/%.o: src/%.c src/sha3.h
 	@mkdir -p obj
-	$(CC) $(FLAGS) $(WARN) -c -o $@ $<
+	$(CC) $(FLAGS) $(WARN) -c -o $@ $< $(CFLAGS) $(CPPFLAGS)
 
 obj/sha3.o: src/sha3.c src/sha3.h
 	@mkdir -p obj
-	$(CC) $(FLAGS) -c -o $@ $<
+	$(CC) $(FLAGS) -c -o $@ $< $(CFLAGS) $(CPPFLAGS)
 
 
 .PHONY: install
