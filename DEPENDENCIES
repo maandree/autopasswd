@@ -2,6 +2,7 @@ RUNTIME DEPENDENCIES:
 
 	libpassphrase	https://github.com/GNU-Pony/libpassphrase
 	argparser-c	https://github.com/maandree/argparser
+	libkeccak	https://github.com/maandree/libkeccak
 	libc
 
 
@@ -9,8 +10,9 @@ BUILD DEPENDENCIES:
 
 	libpassphrase	https://github.com/GNU-Pony/libpassphrase
 	argparser-c	https://github.com/maandree/argparser
+	libkeccak	https://github.com/maandree/libkeccak
 	libc
+	gcc
 	make
-	c99
 	coreutils
 

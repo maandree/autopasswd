@@ -3,17 +3,17 @@
 # notice and this notice are preserved.  This file is offered as-is,
 # without any warranty.
 
-PREFIX ?= /usr
-BIN ?= /bin
-BINDIR ?= $(PREFIX)$(BIN)
-DATA ?= /share
-DATADIR ?= $(PREFIX)$(DATA)
-LICENSEDIR ?= $(DATADIR)/licenses
+PREFIX = /usr
+BIN = /bin
+BINDIR = $(PREFIX)$(BIN)
+DATA = /share
+DATADIR = $(PREFIX)$(DATA)
+LICENSEDIR = $(DATADIR)/licenses
 
 PKGNAME = autopasswd
 COMMAND = autopasswd
 
-OPTIMISE = -Ofast
+OPTIMISE = -O3
 
 WARN = -Wall -Wextra -pedantic -Wdouble-promotion -Wformat=2 -Winit-self -Wmissing-include-dirs  \
        -Wtrampolines -Wfloat-equal -Wshadow -Wmissing-prototypes -Wmissing-declarations          \
@@ -27,25 +27,17 @@ WARN = -Wall -Wextra -pedantic -Wdouble-promotion -Wformat=2 -Winit-self -Wmissi
 F_OPTS = -ftree-vrp -fstrict-aliasing -fipa-pure-const -fstack-usage -fstrict-overflow        \
          -funsafe-loop-optimizations -fno-builtin
 
-X = 
-
-STD = c99
-
-FLAGS = $(OPTIMISE) -std=$(STD) $(F_OPTS) $(X) -DWITH_C99
+FLAGS = $(OPTIMISE) -std=gnu99 $(F_OPTS) $(WARN)
 
 
 .PHONY: all
 all: bin/autopasswd
 
-bin/autopasswd: obj/autopasswd.o obj/sha3.o
+bin/autopasswd: obj/autopasswd.o
 	@mkdir -p bin
-	$(CC) $(FLAGS) -fwhole-program -lpassphrase -largparser -o $@ $^ $(LDFLAGS)
+	$(CC) $(FLAGS) -lpassphrase -largparser -lkeccak -o $@ $^ $(LDFLAGS)
 
-obj/%.o: src/%.c src/sha3.h
-	@mkdir -p obj
-	$(CC) $(FLAGS) $(WARN) -c -o $@ $< $(CFLAGS) $(CPPFLAGS)
-
-obj/sha3.o: src/sha3.c src/sha3.h
+obj/%.o: src/%.c
 	@mkdir -p obj
 	$(CC) $(FLAGS) -c -o $@ $< $(CFLAGS) $(CPPFLAGS)
 
@@ -55,7 +47,8 @@ install: bin/autopasswd
 	install -dm755 -- "$(DESTDIR)$(BINDIR)"
 	install -m755 bin/autopasswd -- "$(DESTDIR)$(BINDIR)/$(COMMAND)"
 	install -dm755 -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
-	install -m644  COPYING LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+	install -m644 COPYING LICENSE -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+
 
 .PHONY: uninstall
 uninstall:
@@ -63,6 +56,7 @@ uninstall:
 	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/COPYING"
 	-rm -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)/LICENSE"
 	-rmdir -- "$(DESTDIR)$(LICENSEDIR)/$(PKGNAME)"
+
 
 .PHONY: clean
 clean:
