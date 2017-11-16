@@ -1,7 +1,4 @@
 _/
-/dist/*/*/*
-!/dist/*/*/PKGBUILD
-!/dist/*/*/autopasswd.install
 bin/
 obj/
 \#*\#
