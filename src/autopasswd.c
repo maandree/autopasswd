@@ -1,7 +1,7 @@
 /**
  * autopasswd – Reproducable password generator
  * 
- * Copyright © 2014  Mattias Andrée (maandree@member.fsf.org)
+ * Copyright © 2014  Mattias Andrée (m@maandree.se)
  * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -206,7 +206,7 @@ static int parse_cmdline(int argc, char* argv[], libkeccak_generalised_spec_t* g
     {
       printf("autopasswd – Reproducable password generator\n");
       printf("\n");
-      printf("Copyright © 2014  Mattias Andrée (maandree@member.fsf.org)\n");
+      printf("Copyright © 2014  Mattias Andrée (m@maandree.se)\n");
       printf("\n");
       printf("This program is free software: you can redistribute it and/or modify\n");
       printf("it under the terms of the GNU Affero General Public License as published by\n");
